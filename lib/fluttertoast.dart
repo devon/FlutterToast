@@ -113,6 +113,7 @@ typedef PositionedToastBuilder = Widget Function(
 ///
 class FToast {
   BuildContext? context;
+  OverlayState? overlay;
 
   static final FToast _instance = FToast._internal();
 
@@ -124,6 +125,11 @@ class FToast {
   /// Take users Context and saves to avariable
   FToast init(BuildContext context) {
     _instance.context = context;
+    return _instance;
+  }
+
+  FToast initWithOverlay(OverlayState overlay) {
+    _instance.overlay = overlay;
     return _instance;
   }
 
@@ -143,9 +149,13 @@ class FToast {
     }
     _ToastEntry _toastEntry = _overlayQueue.removeAt(0);
     _entry = _toastEntry.entry;
-    if (context == null)
-      throw ("Error: Context is null, Please call init(context) before showing toast.");
-    Overlay.of(context!)!.insert(_entry!);
+    if (overlay != null) {
+      overlay!.insert(_entry!);
+    } else {
+      if (context == null)
+        throw ("Error: Context is null, Please call init(context) before showing toast.");
+      Overlay.of(context!)!.insert(_entry!);
+    }
 
     _timer = Timer(_toastEntry.duration!, () {
       Future.delayed(Duration(milliseconds: 360), () {
@@ -189,8 +199,8 @@ class FToast {
     ToastGravity? gravity,
     int fadeDuration = 350,
   }) {
-    if (context == null)
-      throw ("Error: Context is null, Please call init(context) before showing toast.");
+    if (context == null && overlay == null)
+      throw ("Error: Context and overlay is null, Please call init(context) before showing toast.");
     Widget newChild = _ToastStateFul(
         child, toastDuration ?? Duration(seconds: 2),
         fadeDuration: fadeDuration);
